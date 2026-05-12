@@ -77,17 +77,17 @@ wc -w "$ROOT/tasks/$TASK/workers/$ROLE/brief.md"   # 영문 단어수 ≤ 240
 
 #### 5-3. worker 호출 (`_shared/routing.md`의 호출 명령 참조)
 
-- **claude-main / codex-critic / gemini**: Orchestrator가 호출 후 응답을 받음
-- **codex-main / codex-critic** (target_repo 컨텍스트 필요):
-  ```bash
-  TARGET_REPO=$(sed -n 's/^target_repo:[[:space:]]*//p' "$ROOT/tasks/$TASK/workers/$ROLE/brief.md")
-  # 패턴 A: cd 후 실행
-  (cd "$TARGET_REPO" && codex exec "$(cat $ROOT/tasks/$TASK/workers/$ROLE/brief.md)")
-  # 패턴 B: codex가 --cd / --add-dir 지원하면
-  codex exec --cd "$TARGET_REPO" "$(cat $ROOT/tasks/$TASK/workers/$ROLE/brief.md)"
-  ```
+- **claude-main / gemini**: Orchestrator가 MCP 도구 호출 후 응답을 받음
+- **codex-main / codex-critic**: `mcp__codex__codex` MCP 도구 호출
+  - `prompt`: brief.md 내용 그대로
+  - `cwd`: brief.md의 `target_repo` 값 (없으면 `~/VSCodeWorkspace/MultiAgent/tasks/<task>/`)
+  - `sandbox`:
+    - codex-main: `workspace-write` (외부 쓰기 승인 시) / `read-only` (기본)
+    - codex-critic: `read-only` 고정
+  - `approval-policy`: `on-failure` 권장
 - **codex-main 외부 repo 쓰기 조건**: `target_repo` + `write_scope` 명시 + `task.md`의 `workers_approved`에 외부 쓰기 승인 기록 + `log.md`에 `[APPROVAL]` 별도 기록 (4개 모두 충족 시에만)
 - 위 조건 미충족 시 `tasks/<task>/artifacts/`에 diff·patch 형태로 산출하고 사용자가 직접 적용
+- ⚠️ `codex` CLI (`codex exec`)는 anti-api 프록시 경유라 진짜 Codex 능력 안 쓰임. 반드시 MCP 사용.
 
 #### 5-4. result.md 생성
 **worker 응답을 받은 후** 생성 (사전 빈 파일 생성 금지):
