@@ -53,6 +53,19 @@ claude
 
 Orchestrator가 `_templates/task-folder.md` 가이드에 따라 작업 폴더 생성 → worker 승인 요청 → 진행.
 
+## 모니터링 (선택) — mat
+
+작업 진행을 터미널에서 지켜보고 싶다면 **[mat](https://github.com/netwaif/mat)** (MultiAgent Tracker)를 함께 쓴다.
+한 작업의 워커 상태(대기·실행 중·완료·에러)·goal·로그를 한 화면에서 본다.
+시스템을 **읽기만** 한다 — 작업 생성·승인·워커 호출은 하지 않으므로, 켜두거나 꺼도 진행에 영향이 없다.
+
+```bash
+brew install netwaif/tap/mat
+MAT_ROOT=~/VSCodeWorkspace/MultiAgent mat
+```
+
+설치·키 조작 등 자세한 내용은 [mat 저장소](https://github.com/netwaif/mat) 참고.
+
 ## 핵심 원칙
 
 | 원칙 | 강제 방식 |
