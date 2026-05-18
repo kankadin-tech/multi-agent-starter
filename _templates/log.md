@@ -14,7 +14,7 @@
 [2026-05-11 14:45] [WORKER_CALL] claude-main brief 전달. input: context.md + sources/spec.md
 [2026-05-11 15:10] [VERIFICATION] claude-main result 검토 — output_format ✅, constraints ✅, paths ✅
 [2026-05-11 15:11] [DECISION] codex-critic 호출 결정. 산출물 리뷰·비평 필요
-[2026-05-11 16:00] [COMPLETE] 작업 완료. learnings.md 업데이트 필요
+[2026-05-11 16:00] [COMPLETE] 작업 완료. 교훈: 시스템 일반→_shared/learnings.md, 프로젝트 특화→_local/learnings.md
 ========================================
 -->
 

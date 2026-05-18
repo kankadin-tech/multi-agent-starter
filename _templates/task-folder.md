@@ -135,7 +135,7 @@ mkdir -p "$ROOT/tasks/$TASK/artifacts"
 ### Step 8: 작업 완료
 
 - `task.md`의 `status: done` 갱신
-- `_shared/learnings.md`에 재사용 가능한 교훈만 추가 (없으면 생략)
+- 재사용 교훈 추가 (없으면 생략) — **시스템 일반**: `_shared/learnings.md`(추적·공개) / **프로젝트 특화**: `_local/learnings.md`(git 추적 안 함, 없으면 생성). `_local/learnings.md`는 명시 요청 없이는 읽지 않는다.
 - `log.md`에 `[COMPLETE]` 태그로 마무리
 
 ## 명명 규칙

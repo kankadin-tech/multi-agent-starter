@@ -26,7 +26,7 @@ Orchestrator (Claude Code session, internal reasoning)
 6. worker 실행 → `result.md` 저장
 7. `result.md`의 Verification Checklist 실행
 8. 검증 결과를 `log.md`에 append (`[VERIFICATION]` 태그)
-9. 완료 후 `_shared/learnings.md`에 재사용 교훈만 추가
+9. 완료 후 교훈 추가 (분류): **시스템 운영 자체**에 대한 일반 교훈 → `_shared/learnings.md`(추적·공개). **특정 외부 프로젝트 한정**(mat·hwpx 등) → `_local/learnings.md`(git 추적 안 함, 없으면 생성). `_local/learnings.md`는 명시 요청 없이는 로드하지 않는다.
 
 ## Context Rules
 
