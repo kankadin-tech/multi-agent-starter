@@ -17,6 +17,7 @@
 | INV7 | 권위 우선순위 문구가 매뉴얼 §3과 design-basis.md §2에서 동일 (CLAUDE.md > routing/approval/orchestrator-rules > 매뉴얼) | Clash 해소 규칙 붕괴 |
 | INV8 | 인터랙티브 전용 + worktree/백그라운드 세션 금지 규칙이 orchestrator-rules.md와 매뉴얼에 모두 존재 | D5 위반 |
 | INV9 | gemini 기본 모델이 routing.md·design-basis.md D4에서 `gemini-3.1-pro-low`로 일치하고, `pro-high`가 기본·폴백 기본 경로가 아님 (매뉴얼도 pro-high 비권장 유지) | C1 재발 — 정본이 known-bad pro-high를 기본 호출 (D4 위반) |
+| INV10 | 폐기 도구의 **호출형** `mcp__gemini__gemini_*`(prompt/vision 등)가 routing.md·task-folder.md·CLAUDE.md에 없음. `mcp__gemini__*` 잔여 언급은 **폐기 안내 문맥에서만** (호출 명령·예시·「또는」 선택지로 등장 금지) | C2 재발 — gemini-mcp 폐기 시 잔존 호출 참조가 즉시 실패 (D4 위반) |
 
 ## 자가 점검 스크립트
 
@@ -55,6 +56,11 @@ grep -lin 'worktree\|배경\|백그라운드\|background session' "$ROOT/_shared
 echo "INV9 gemini 기본 모델 (routing=pro-low, D4=pro-low 기본·pro-high 제외 여야; pro-high 가 기본·1순위면 FAIL)"
 grep -n 'gemini-3.1-pro' "$ROOT/_shared/routing.md"
 grep -n '\*\*D4\*\*' "$ROOT/_shared/design-basis.md"
+
+echo "INV10 폐기 도구 호출형 mcp__gemini__gemini_* (출력 없어야 PASS)"
+grep -rn 'mcp__gemini__gemini_' "$ROOT/_shared/routing.md" "$ROOT/_templates/task-folder.md" "$ROOT/CLAUDE.md"
+echo "INV10b mcp__gemini__* 잔여 언급 — 전부 '폐기' 안내 문맥이어야 (호출·예시·「또는」 선택지면 FAIL)"
+grep -rn 'mcp__gemini__' "$ROOT/_shared/routing.md" "$ROOT/_templates/task-folder.md" "$ROOT/CLAUDE.md"
 ```
 
 ## 전면 재감사가 필요한 경우 (이 점검으로 부족)

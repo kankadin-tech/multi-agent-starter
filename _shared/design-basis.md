@@ -38,7 +38,7 @@
 - **D1 (B2) write_scope 값 집합** = `none | tasks-only | "패턴"`. `tasks-only`=codex-main 기본(tasks/<task>/ 내부만). CLAUDE.md가 정식 정의처. routing.md·_templates·매뉴얼 동일해야 함. (2026-05-15 R1)
 - **D2 (B7) codex-critic 선행조건** = "리뷰 대상 산출물 경로 존재 — 보통 claude-main result.md, 또는 brief에 명시된 기존 코드·문서·소스". claude-main 전용 아님. (2026-05-15 R2)
 - **D3 (R5) context.md 구조** = 4섹션 유지. 레퍼런스 5단(Intent/Files/Decisions/State/Next)은 *압축/핸드오프 체크리스트*지 context.md 템플릿 아님. `Files Modified/Decisions Made` 헤딩 도입 금지(히스토리 변질 → log.md 역할 침범). codex-critic 검증 완료. (2026-05-15)
-- **D4** gemini 기본 모델 = `pro-low`, 폴백 = pro-low → Flash. `pro-high`는 로컬 프록시 `400 INVALID_ARGUMENT`가 재현되어 기본·폴백 경로에서 제외(명시 요청 시만). 폴백 모델의 시스템 사실 주장은 권위문서로 교차검증 후 채택. (근거 갱신 2026-05-19: learnings.md [2026-05-15] — pro-high 재현 실패, 동일 프록시에서 pro-low 정상; repo-consistency-audit C1. 이전 결정: 폴백 순서 pro-high → pro-low → Flash)
+- **D4** gemini는 **단일 브리지 `mcp__gemini-pro__*` 하나만** 사용 (CLI 래퍼 `mcp__gemini__*`는 폐기 예정 — 폐기 시 잔존 참조는 즉시 호출 실패). 기본 모델 = `pro-low`, 빠른 경로 = 같은 브리지 `model: gemini-3-flash`, 폴백 = pro-low → flash. `pro-high`는 로컬 프록시 `400 INVALID_ARGUMENT`가 재현되어 기본·폴백 경로에서 제외(명시 요청 시만). 폴백 모델의 시스템 사실 주장은 권위문서로 교차검증 후 채택. (근거 갱신 2026-05-19 C1: learnings.md [2026-05-15] — pro-high 재현 실패, 동일 프록시 pro-low 정상. 2026-05-20 C2: gemini-mcp(CLI) 폐기 → 단일 gemini-pro 브리지로 통일, Flash는 model 파라미터. 이전 결정: 2-브리지(`mcp__gemini__*` Flash + `mcp__gemini-pro__*` Pro), 폴백 pro-high → pro-low → Flash)
 - **D5** MultiAgent 작업은 인터랙티브 세션 전용, worktree/백그라운드 세션 금지. (orchestrator-rules.md §1)
 
 ## 4. 불변식

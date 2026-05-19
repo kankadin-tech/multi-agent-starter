@@ -95,7 +95,7 @@ wc -w "$ROOT/tasks/$TASK/workers/$ROLE/brief.md"   # 영문 단어수 ≤ 240
   - `prompt`: brief.md 내용 그대로
   - `model`: agent frontmatter `model: opus` 자동 적용
   - 응답 텍스트를 Orchestrator가 받아 `result.md`에 기록
-- **gemini**: `mcp__gemini__*` 또는 `mcp__gemini-pro__*` MCP 도구 호출. Orchestrator가 응답을 `result.md`에 기록
+- **gemini**: `mcp__gemini-pro__*` MCP 도구 호출 (모델은 `model` 파라미터로 선택 — `gemini-3-flash` 빠름 / `gemini-3.1-pro-low` 기본). Orchestrator가 응답을 `result.md`에 기록
 - **codex-main / codex-critic**: `mcp__codex__codex` MCP 도구 호출
   - `prompt`: brief.md 내용 그대로
   - `cwd`:
