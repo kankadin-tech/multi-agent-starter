@@ -70,6 +70,13 @@ MAT_ROOT=~/VSCodeWorkspace/MultiAgent mat
 
 설치·키 조작 등 자세한 내용은 [mat 저장소](https://github.com/netwaif/mat) 참고.
 
+> ⚠️ mat에서 워커 한 줄 목적이 ` ```yaml `로 보이면 **알려진 경미 이슈**(KI-1)다.
+> 시스템·진행에는 영향 없다. [`KNOWN_ISSUES.md`](./KNOWN_ISSUES.md) 참고.
+
+## 알려진 이슈
+
+해결·보류 중인 알려진 결함은 [`KNOWN_ISSUES.md`](./KNOWN_ISSUES.md)에 추적한다.
+
 ## 핵심 원칙
 
 | 원칙 | 강제 방식 |
