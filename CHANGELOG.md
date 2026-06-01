@@ -3,6 +3,20 @@
 이 파일은 MultiAgent orchestration 시스템의 주요 변경을 기록한다.
 형식은 [Keep a Changelog](https://keepachangelog.com/), 버전은 [Semantic Versioning](https://semver.org/lang/ko/)을 따른다.
 
+## [1.0.1] - 2026-06-01
+
+모델·추론 정책 표기 정리(문서 patch). 동작 변경 없음.
+
+### Changed
+- **모델 식별자 별칭화** (`_shared/routing.md`): claude-main을 버전 문자열(`claude-opus-4-7` 등) 대신 별칭 `opus`로 표기 — 모델이 올라가도 문서 갱신 불필요. codex 예시 일반화, gemini는 `gemini-3.1-pro-low` 핀 유지 + "프록시 업그레이드 시에만 갱신" 노트.
+- **claude-main 추론 강도(effort) 명문화**: `effort` 핀 없음 → 세션 `/effort` 상속(현 기본). 고정하려면 frontmatter `effort:`.
+
+### Added
+- **design-basis D7**: 모델 식별자 표기 정책(별칭 원칙 / gemini 핀 예외·세부는 D4 정본 / effort 비대칭 근거).
+
+### Verification
+- codex-critic adversarial 검수: 치명 0, 권장 3 반영(잔존 핀 제거 포함). INV9/INV10/INV11 PASS, 회귀 없음.
+
 ## [1.0.0] - 2026-06-01
 
 첫 버전 태깅. 기존 실사용 시스템을 1.0.0 기준선으로 고정하고, harness(revfactory) 참고 버전 업그레이드를 함께 반영한다.
@@ -25,4 +39,5 @@
 ### Verification
 - 배선(INV11a/b/c) PASS · 회귀 없음, 탁상 분기 커버리지, 실전 콜드세션 3/3 PASS, codex-critic adversarial 리뷰 5 ISSUE 반영.
 
+[1.0.1]: https://github.com/netwaif/multi-agent-starter/releases/tag/v1.0.1
 [1.0.0]: https://github.com/netwaif/multi-agent-starter/releases/tag/v1.0.0
