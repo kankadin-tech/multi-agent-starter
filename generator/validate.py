@@ -10,6 +10,7 @@ PASS/FAIL을 출력하고, 하나라도 FAIL이면 비정상 종료(exit 1).
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import sys
 from pathlib import Path
@@ -94,7 +95,84 @@ def run_checks(target: Path, flavor: str) -> list[tuple[bool, str]]:
         active = (cfg["forbidden_worker"] in routing) or (cfg["forbidden_worker"] in instr_txt)
         check(not active, f"C8b 금지 워커 '{cfg['forbidden_worker']}' 활성 참조 없음")
 
+    # C9 backends.json 어댑터 레지스트리 스키마 (구조 검증)
+    raw = read(target, "_shared/backends.json")
+    problems = _backends_problems(raw, flavor) if raw is not None else ["_shared/backends.json 없음"]
+    check(not problems, f"C9 backends.json 스키마 (문제: {problems[0] if problems else '-'})")
+    check((target / "_shared/adapters/call_worker.sh").is_file(),
+          "C9b 디스패처 _shared/adapters/call_worker.sh 존재")
+
     return results
+
+
+_CALL_TYPES = {"native", "mcp", "cli", "api"}
+_APPROVAL = {"worker", "orchestrator"}
+_CAPTURE = {"orchestrator", "tool-return", "stdout", "envelope"}
+_BRIEF_MODES = {"path", "content", "stdin", "file-arg"}
+_CLI_ALLOWLIST = {"agy", "codex", "claude"}
+
+
+def _backend_record_problems(rec: dict, where: str, *, is_fallback: bool) -> list[str]:
+    p: list[str] = []
+    ct = rec.get("call_type")
+    if ct not in _CALL_TYPES:
+        return [f"{where}: call_type 무효({ct})"]
+    if "model" not in rec:
+        p.append(f"{where}: model 누락")
+    if rec.get("approval_class") not in _APPROVAL:
+        p.append(f"{where}: approval_class 무효")
+    if rec.get("result_capture") not in _CAPTURE:
+        p.append(f"{where}: result_capture 무효")
+    if ct in ("cli", "api"):
+        tmo = rec.get("timeout")
+        if not isinstance(tmo, int) or tmo <= 0:
+            p.append(f"{where}: timeout 양의정수 필수")
+    if ct == "cli" and rec.get("brief_mode") not in _BRIEF_MODES:
+        p.append(f"{where}: brief_mode 무효/누락(cli)")
+    if ct == "native" and "native" not in rec:
+        p.append(f"{where}: native 블록 누락")
+    if ct == "mcp":
+        if not rec.get("mcp", {}).get("tool"):
+            p.append(f"{where}: mcp.tool 누락")
+    if ct == "cli":
+        cli = rec.get("cli", {})
+        if cli.get("command") not in _CLI_ALLOWLIST:
+            p.append(f"{where}: cli.command allowlist 위반({cli.get('command')})")
+        if not isinstance(cli.get("args_template"), list):
+            p.append(f"{where}: cli.args_template 배열 필수")
+    if ct == "api":
+        api = rec.get("api", {})
+        ref = api.get("ref", "")
+        if not ref.startswith("adapters/") or ".." in ref:
+            p.append(f"{where}: api.ref는 adapters/ 내부·'..' 금지")
+        if api.get("brief_pass") not in {"arg1", "stdin", "env"}:
+            p.append(f"{where}: api.brief_pass 무효/누락(arg1|stdin|env)")
+    if not is_fallback:
+        for i, fb in enumerate(rec.get("fallbacks", []) or []):
+            p += _backend_record_problems(fb, f"{where}.fallback[{i}]", is_fallback=True)
+    return p
+
+
+def _backends_problems(raw: str, flavor: str) -> list[str]:
+    try:
+        data = json.loads(raw)
+    except Exception as e:  # noqa: BLE001
+        return [f"JSON 파싱 실패: {e}"]
+    if "mcp__gemini__gemini_" in raw:
+        return ["폐기 도구 호출형 mcp__gemini__gemini_* 잔존"]
+    p: list[str] = []
+    if not data.get("schema_version"):
+        p.append("schema_version 누락")
+    if data.get("flavor") != flavor:
+        p.append(f"flavor 불일치(파일={data.get('flavor')}, 기대={flavor})")
+    workers = data.get("workers")
+    if not isinstance(workers, dict) or not workers:
+        return p + ["workers 비어있음"]
+    for role, rec in workers.items():
+        if not isinstance(rec, dict):
+            p.append(f"{role}: 레코드 형식 오류"); continue
+        p += _backend_record_problems(rec, role, is_fallback=False)
+    return p
 
 
 def main() -> None:
