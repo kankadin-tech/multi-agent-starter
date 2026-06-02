@@ -80,10 +80,9 @@ def run_checks(target: Path, flavor: str) -> list[tuple[bool, str]]:
     miss_topo = [t for t in TOPOLOGY if t not in routing]
     check(not miss_topo, f"C5 토폴로지 4패턴 (없음: {miss_topo or '-'})")
 
-    # C6 gemini 백엔드 정책: backends.json gemini = agy cli + pro-high (옛 mcp 프록시 브리지 폐기)
-    bj = read(target, "_shared/backends.json") or ""
-    c6_ok = ('"command": "agy"' in bj) and ("gemini-3.1-pro-high" in bj)
-    check(c6_ok, "C6 gemini 백엔드 agy/pro-high (backends.json)")
+    # C6 gemini 백엔드 정책: backends.json의 gemini 워커가 cli/agy + pro-high (레코드 직접 검사)
+    c6_ok, c6_why = _gemini_policy_ok(read(target, "_shared/backends.json"))
+    check(c6_ok, f"C6 gemini 백엔드 agy/pro-high (backends.json) {('— ' + c6_why) if not c6_ok else ''}")
 
     # C7 write_scope 값 일관 (tasks-only 가 지침/routing/brief에 존재)
     ws = all("tasks-only" in t for t in (instr_txt, routing, brief_tpl))
@@ -95,9 +94,9 @@ def run_checks(target: Path, flavor: str) -> list[tuple[bool, str]]:
         active = (cfg["forbidden_worker"] in routing) or (cfg["forbidden_worker"] in instr_txt)
         check(not active, f"C8b 금지 워커 '{cfg['forbidden_worker']}' 활성 참조 없음")
 
-    # C9 backends.json 어댑터 레지스트리 스키마 (구조 검증)
+    # C9 backends.json 어댑터 레지스트리 스키마 (구조 + api.ref 파일 존재)
     raw = read(target, "_shared/backends.json")
-    problems = _backends_problems(raw, flavor) if raw is not None else ["_shared/backends.json 없음"]
+    problems = _backends_problems(raw, flavor, target) if raw is not None else ["_shared/backends.json 없음"]
     check(not problems, f"C9 backends.json 스키마 (문제: {problems[0] if problems else '-'})")
     check((target / "_shared/adapters/call_worker.sh").is_file(),
           "C9b 디스패처 _shared/adapters/call_worker.sh 존재")
@@ -112,7 +111,7 @@ _BRIEF_MODES = {"path", "content", "stdin", "file-arg"}
 _CLI_ALLOWLIST = {"agy", "codex", "claude"}
 
 
-def _backend_record_problems(rec: dict, where: str, *, is_fallback: bool) -> list[str]:
+def _backend_record_problems(rec: dict, where: str, target: Path, *, is_fallback: bool) -> list[str]:
     p: list[str] = []
     ct = rec.get("call_type")
     if ct not in _CALL_TYPES:
@@ -145,15 +144,34 @@ def _backend_record_problems(rec: dict, where: str, *, is_fallback: bool) -> lis
         ref = api.get("ref", "")
         if not ref.startswith("adapters/") or ".." in ref:
             p.append(f"{where}: api.ref는 adapters/ 내부·'..' 금지")
+        elif not (target / "_shared" / ref).is_file():
+            p.append(f"{where}: api.ref 파일 없음(_shared/{ref})")
         if api.get("brief_pass") not in {"arg1", "stdin", "env"}:
             p.append(f"{where}: api.brief_pass 무효/누락(arg1|stdin|env)")
     if not is_fallback:
         for i, fb in enumerate(rec.get("fallbacks", []) or []):
-            p += _backend_record_problems(fb, f"{where}.fallback[{i}]", is_fallback=True)
+            p += _backend_record_problems(fb, f"{where}.fallback[{i}]", target, is_fallback=True)
     return p
 
 
-def _backends_problems(raw: str, flavor: str) -> list[str]:
+def _gemini_policy_ok(raw: str | None) -> tuple[bool, str]:
+    """C6: gemini 워커가 cli/agy + gemini-3.1-pro-high 인지 레코드 직접 검사."""
+    if raw is None:
+        return False, "backends.json 없음"
+    try:
+        g = (json.loads(raw).get("workers") or {}).get("gemini")
+    except Exception as e:  # noqa: BLE001
+        return False, f"파싱 실패: {e}"
+    if not isinstance(g, dict):
+        return False, "gemini 워커 없음"
+    if g.get("call_type") != "cli" or g.get("cli", {}).get("command") != "agy":
+        return False, "gemini call_type cli·command agy 아님"
+    if g.get("model") != "gemini-3.1-pro-high":
+        return False, f"gemini model이 pro-high 아님({g.get('model')})"
+    return True, ""
+
+
+def _backends_problems(raw: str, flavor: str, target: Path) -> list[str]:
     try:
         data = json.loads(raw)
     except Exception as e:  # noqa: BLE001
@@ -171,7 +189,7 @@ def _backends_problems(raw: str, flavor: str) -> list[str]:
     for role, rec in workers.items():
         if not isinstance(rec, dict):
             p.append(f"{role}: 레코드 형식 오류"); continue
-        p += _backend_record_problems(rec, role, is_fallback=False)
+        p += _backend_record_problems(rec, role, target, is_fallback=False)
     return p
 
 
