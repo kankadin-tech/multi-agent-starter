@@ -32,6 +32,11 @@ TEMPLATE_DIR = SCRIPT_DIR / "templates" / "claude"
 # 시스템 템플릿이 아닌 repo 인프라 — 재생성 소스에서 제외.
 INFRA_PREFIXES = ("generator/", "skills/", ".claude-plugin/", ".codex-plugin/", "dist/")
 
+# front-page/패키지 문서 — 루트는 repo 첫 화면(설치 안내)·배포 버전 이력이고,
+# 설치된 타깃용 동명 문서는 templates/claude/ 에 독립 정본으로 둔다(서로 audience가
+# 달라 의도적으로 분기). 따라서 이 파일들은 sync 대상에서 제외한다.
+DECOUPLED_FILES = ("README.md", "CHANGELOG.md", "KNOWN_ISSUES.md")
+
 # 경로 일반화: 작성자 로컬 경로 → 플레이스홀더. (URL 안 netwaif 는 건드리지 않음)
 # 더 긴/구체 경로를 먼저 둔다(접두어 충돌 방지). 현재 둘은 서로 접두어 관계가 아니라
 # 순서 무관하지만, 새 규칙 추가 시 안전하도록 관례를 지킨다.
@@ -56,7 +61,7 @@ def system_files() -> list[str]:
     """루트 tracked 파일 중 Claude 시스템 템플릿에 속하는 것만."""
     return sorted(
         f for f in git_tracked(REPO_ROOT)
-        if not f.startswith(INFRA_PREFIXES)
+        if not f.startswith(INFRA_PREFIXES) and f not in DECOUPLED_FILES
     )
 
 
@@ -84,8 +89,9 @@ def build_expected() -> dict[str, bytes]:
 
 def current_template() -> dict[str, bytes]:
     rels = [
-        str(p.relative_to(TEMPLATE_DIR).as_posix())
-        for p in TEMPLATE_DIR.rglob("*") if p.is_file()
+        rel for p in TEMPLATE_DIR.rglob("*") if p.is_file()
+        for rel in [str(p.relative_to(TEMPLATE_DIR).as_posix())]
+        if rel not in DECOUPLED_FILES  # 분리된 문서는 sync 범위 밖(비교·삭제 안 함)
     ]
     return {rel: (TEMPLATE_DIR / rel).read_bytes() for rel in sorted(rels)}
 
