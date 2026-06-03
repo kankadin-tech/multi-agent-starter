@@ -12,9 +12,17 @@
 
 ### Added
 - `generator/init.py` — flavor·대상 지정 결정적 생성기 (tasks/·_local/ 보존, dry-run, `--yes`, guard).
-- `generator/validate.py` — flavor별 불변식 자가점검 (claude 8 / codex 9), `init`이 설치 후 자동 호출.
+- `generator/validate.py` — flavor별 불변식 자가점검 (claude 10 / codex 11 / antigravity 12), `init`이 설치 후 자동 호출.
 - `generator/build_zip.py` — 플러그인 없이 쓰는 자립형 ZIP(run.command/run.bat + 한글 README), 재현가능 빌드.
-- `generator/templates/{claude,codex}/` — 두 flavor 정본 템플릿.
+- `generator/templates/{claude,codex,antigravity}/` — 세 flavor 정본 템플릿.
+- **Antigravity flavor** — Antigravity(Gemini 3.1 Pro High)를 오케스트레이터로, claude-main·codex-main·codex-critic을 워커로. 멀티모달·긴 문서는 오케스트레이터가 직접(동일 벤더 gemini 워커 없음).
+- **연결 어댑터 레이어** (vendor/model-free 하네스의 토대):
+  - `_shared/backends.json` — 역할→모델→연결방식(native·mcp·cli·api) 레지스트리(머신 검증되는 단일 진실원).
+  - `_shared/adapters/call_worker.sh` — cli/api 디스패처(allowlist·옵션인젝션 방어·결과 envelope JSON·폴백·타임아웃). native/mcp는 오케스트레이터 직접 호출.
+  - `_shared/adapters/_run.py` — 결정적 타임아웃 러너(coreutils timeout 부재 시 폴백, 프로세스그룹 TERM→KILL, 초과 시 124).
+- gemini 백엔드를 폐기된 프록시에서 **Antigravity CLI `agy`**(gemini-3.1-pro-high)로 이전. API 연결은 슬롯으로 예약.
+- `tests/` — 외부·유료 모델 호출 없는 결정적 회귀 테스트(`run.sh`): 3 flavor 생성·update 보존·디스패처 폴백/타임아웃/가드.
+- `docs/ACCEPTANCE.md` — 3호스트(claude·codex·antigravity) 수용 체크리스트 + 4층 신뢰모델 + 테스트 시나리오 S1~S10 + 사인오프 표.
 - `generator/sync_claude_template.py` — 루트(Claude 정본)에서 `templates/claude` 재생성 + drift 가드.
 - `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json` — Claude Code·Codex 플러그인 매니페스트.
 - `skills/configure-multiagent/` — "멀티 에이전트 시스템 구성해줘" front door.
@@ -24,10 +32,14 @@
 - 배포: clone → 플러그인(`/plugins` 마켓플레이스) / ZIP fallback.
 - 루트 문서(README/CHANGELOG/KNOWN_ISSUES)를 repo front-page·패키지 이력으로 분리. 설치된 타깃용 동명 문서는 `templates/` 에 독립 정본으로 둔다.
 
+### Fixed
+- 디스패처 타임아웃이 자식 SIGTERM 사망코드(-15)를 반환해 timeout을 error로 오분류하던 버그 — 타임아웃 시 항상 124 반환(`_run.py`, root+템플릿 3벌).
+
 ### Note
 - 이번 2.0.0은 *배포/패키징* 변경이지 시스템 규칙 변경이 아니다. 설치되는 시스템의 **동작** 버전은 flavor별로 다른 축을 잇는다:
   - `claude` flavor — **1.0.1 라인 계승** (기존 실사용 시스템의 연장; `generator/templates/claude/CHANGELOG.md`).
   - `codex` flavor — **0.1.0 신규 파생** (multi-agent-starter의 Codex orchestrator 버전; `generator/templates/codex/CHANGELOG.md`).
+  - `antigravity` flavor — **0.1.0 신규 파생** (Antigravity orchestrator 버전; `generator/templates/antigravity/CHANGELOG.md`).
 
 ---
 
