@@ -80,6 +80,19 @@ run_backend() {
         *)                cmd+=("$a");;
       esac
     done <<<"$args_json"
+    # codex 워커: 기본은 git 요구(안전망). git 없으면 명확히 실패. 옵트아웃 시에만 우회.
+    if [ "$command_bin" = "codex" ]; then
+      if [ "${MULTIAGENT_CODEX_SKIP_GIT:-0}" = "1" ]; then
+        local -a _nc=(); local _ins=0 _x
+        for _x in "${cmd[@]}"; do
+          _nc+=("$_x")
+          if [ "$_ins" = 0 ] && [ "$_x" = "exec" ]; then _nc+=("--skip-git-repo-check"); _ins=1; fi
+        done
+        cmd=("${_nc[@]}")
+      elif ! command -v git >/dev/null 2>&1; then
+        die "codex 워커는 git이 필요합니다. git 설치 후 재시도하거나, 위험을 감수하면 MULTIAGENT_CODEX_SKIP_GIT=1 로 우회하세요." 8
+      fi
+    fi
   else
     local ref reqenv brief_pass
     ref="$(jq -r '.api.ref' <<<"$spec")"
