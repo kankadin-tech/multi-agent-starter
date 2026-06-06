@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./assets/brand/harness-multiagent-banner.png" alt="Harness MultiAgent" width="100%">
+</p>
+
 # MultiAgent — Claude · Codex · Gemini Orchestration Starter
 
 Claude Code를 오케스트레이터로 두고 Claude·Codex·Gemini를 워커로 호출하는 **파일 기반 멀티에이전트 시스템**.
