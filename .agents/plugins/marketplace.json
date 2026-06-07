@@ -1,0 +1,20 @@
+{
+  "name": "multi-agent-starter",
+  "interface": {
+    "displayName": "MultiAgent Starter"
+  },
+  "plugins": [
+    {
+      "name": "multi-agent-starter",
+      "source": {
+        "source": "local",
+        "path": "./plugins/multi-agent-starter"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Coding"
+    }
+  ]
+}
