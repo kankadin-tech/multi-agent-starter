@@ -39,10 +39,15 @@ _shared/adapters/export_to_vault.sh <task> --media copy    # (b) 이미지·PDF 
 
 그 다음 **볼트에서** (별도 세션): `cd <vault> && claude` → `/inbox` → `/ingest`.
 
-## 볼트 경로 설정
+## 볼트 경로·목적지 설정
 
-우선순위: `--vault` 플래그 > `KNOT_VAULT` 환경변수 > `_shared/vault.config`(`vault=`) > 스크립트 기본값.
-폴더마다 다른 볼트를 쓰려면 `_shared/vault.config`만 고치면 된다.
+- **볼트 경로**: `--vault` > `KNOT_VAULT` > `_shared/vault.config`(`vault=`) > 기본값. `~`/`$HOME` 확장.
+- **목적지 하위경로**(폴더별 분리): `--inbox-dir` > `_shared/vault.config`(`inbox_dir=`) > `inbox/notes/_misc`.
+  - 볼트 `/inbox` 규약상 `inbox/{타입}/{도메인}` 구조 권장. 예: `inbox_dir=inbox/notes/co-work`
+    → type=notes, domain=co-work 로 트리아지되어 기존 /inbox·/ingest 그대로 동작.
+  - 절대경로·`..` 금지(볼트 밖 탈출 차단).
+
+폴더마다 다른 볼트/목적지를 쓰려면 `_shared/vault.config`만 고치면 된다(update 시 보존됨).
 
 ## 떨어지는 파일
 

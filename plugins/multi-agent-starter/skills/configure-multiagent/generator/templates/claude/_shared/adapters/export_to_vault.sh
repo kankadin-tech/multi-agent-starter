@@ -16,9 +16,11 @@
 #   --dry-run        쓰지 않고 생성될 내용을 출력
 #   --domain <d>     도메인 강제(기본 _misc — 볼트 /inbox가 판정)
 #   --vault <path>   볼트 경로 강제
+#   --inbox-dir <p>  볼트 내 목적지 하위경로(기본 inbox/notes/_misc). 폴더별 분리용.
 #   --media <mode>   (b) 아티팩트 처리: ref(기본)=경로 참조 | copy=볼트로 복사+임베드
 #
-# 볼트 경로 우선순위: --vault > $KNOT_VAULT > _shared/vault.config(vault=) > 기본값
+# 볼트 경로 우선순위:   --vault > $KNOT_VAULT > _shared/vault.config(vault=) > 기본값
+# 목적지 우선순위:     --inbox-dir > _shared/vault.config(inbox_dir=) > inbox/notes/_misc
 # ──────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
@@ -38,16 +40,17 @@ expand_tilde() {
 
 # ── 인자 파싱 ──────────────────────────────────────────────────────────────
 TASKS=()
-ALL=0; DRY_RUN=0; DOMAIN="_misc"; MEDIA="ref"; VAULT_FLAG=""
+ALL=0; DRY_RUN=0; DOMAIN="_misc"; MEDIA="ref"; VAULT_FLAG=""; INBOX_DIR_FLAG=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --all)     ALL=1; shift ;;
-    --dry-run) DRY_RUN=1; shift ;;
-    --domain)  DOMAIN="${2:?--domain 값 필요}"; shift 2 ;;
-    --vault)   VAULT_FLAG="${2:?--vault 값 필요}"; shift 2 ;;
-    --media)   MEDIA="${2:?--media 값 필요}"; shift 2 ;;
-    -*)        echo "알 수 없는 옵션: $1" >&2; exit 2 ;;
-    *)         TASKS+=("$1"); shift ;;
+    --all)       ALL=1; shift ;;
+    --dry-run)   DRY_RUN=1; shift ;;
+    --domain)    DOMAIN="${2:?--domain 값 필요}"; shift 2 ;;
+    --vault)     VAULT_FLAG="${2:?--vault 값 필요}"; shift 2 ;;
+    --inbox-dir) INBOX_DIR_FLAG="${2:?--inbox-dir 값 필요}"; shift 2 ;;
+    --media)     MEDIA="${2:?--media 값 필요}"; shift 2 ;;
+    -*)          echo "알 수 없는 옵션: $1" >&2; exit 2 ;;
+    *)           TASKS+=("$1"); shift ;;
   esac
 done
 case "$MEDIA" in ref|copy) ;; *) echo "--media 는 ref|copy" >&2; exit 2 ;; esac
@@ -61,7 +64,19 @@ elif [[ -f "$HARNESS_ROOT/_shared/vault.config" ]]; then
 fi
 [[ -n "$VAULT" ]] || VAULT="$DEFAULT_VAULT"
 VAULT="$(expand_tilde "$VAULT")"
-NOTES_DIR="$VAULT/inbox/notes/_misc"
+
+# inbox 목적지 하위경로(볼트 루트 기준). 폴더별 분리용.
+# 우선순위: --inbox-dir > _shared/vault.config(inbox_dir=) > 기본 inbox/notes/_misc
+INBOX_REL="$INBOX_DIR_FLAG"
+if [[ -z "$INBOX_REL" && -f "$HARNESS_ROOT/_shared/vault.config" ]]; then
+  INBOX_REL="$(awk -F= '/^[[:space:]]*inbox_dir[[:space:]]*=/{sub(/^[^=]*=/,"");gsub(/^[[:space:]]+|[[:space:]]+$/,"");print;exit}' "$HARNESS_ROOT/_shared/vault.config")"
+fi
+[[ -n "$INBOX_REL" ]] || INBOX_REL="inbox/notes/_misc"
+# 안전: 볼트 내부 상대경로만(절대·.. 금지 → 볼트 밖 탈출 방지)
+case "$INBOX_REL" in
+  /*|*..*) echo "✗ inbox_dir 은 볼트 내부 상대경로여야(절대·.. 금지): $INBOX_REL" >&2; exit 2 ;;
+esac
+NOTES_DIR="$VAULT/$INBOX_REL"
 PAPERS_DIR="$VAULT/inbox/papers/_misc"
 
 # ── 대상 task 목록 ─────────────────────────────────────────────────────────
