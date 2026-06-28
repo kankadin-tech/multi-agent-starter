@@ -128,6 +128,13 @@ def run_checks(target: Path, flavor: str) -> list[tuple[bool, str]]:
     check((target / "_shared/adapters/call_worker.sh").is_file(),
           "C9b 디스패처 _shared/adapters/call_worker.sh 존재")
 
+    # C10 Vault Bridge 번들 — 산출물→볼트 연결 파일 3종 + 지침 lifecycle 문구
+    bridge = ["_shared/adapters/export_to_vault.sh", "_shared/vault-bridge.md", "_shared/vault.config"]
+    miss_b = [b for b in bridge if not (target / b).is_file()]
+    lifecycle_ok = "export_to_vault.sh" in instr_txt
+    check(not miss_b and lifecycle_ok,
+          f"C10 Vault Bridge 번들 (없음: {miss_b or '-'}, lifecycle: {'OK' if lifecycle_ok else '누락'})")
+
     return results
 
 

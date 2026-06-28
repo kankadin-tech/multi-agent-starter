@@ -27,6 +27,7 @@ Orchestrator (Claude Code session, internal reasoning)
 7. `result.md`의 Verification Checklist 실행
 8. 검증 결과를 `log.md`에 append (`[VERIFICATION]` 태그). 작업이 끝나면 `task.md`의 `status`를 `done`으로 갱신
 9. 완료 후 교훈 추가 (분류): **시스템 운영 자체**에 대한 일반 교훈 → `_shared/learnings.md`(추적·공개). **특정 외부 프로젝트 한정**(mat·hwpx 등) → `_local/learnings.md`(git 추적 안 함, 없으면 생성). `_local/learnings.md`는 명시 요청 없이는 로드하지 않는다.
+10. **(선택·수동) 볼트 연결**: 산출물을 LLM Wiki 볼트(knot 계열)에 기록·분류·분석·연결하려면 `_shared/adapters/export_to_vault.sh <task>`(전체는 `--all`, 이미지·PDF 복사는 `--media copy`) 실행 → 볼트 inbox로 단방향 전송. 볼트 무수정. 볼트 경로는 `_shared/vault.config`. 규약: `_shared/vault-bridge.md`. 자동 아님 — 명시적 호출. 볼트 미사용 폴더면 무시.
 
 > **기존 작업 재개 시**(새 세션 포함)는 1번부터가 아니라 `_shared/orchestrator-rules.md` §3 **재진입 프로토콜**을 먼저 따른다 (재정박 → 분기 → 에러 후 진행).
 

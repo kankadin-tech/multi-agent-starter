@@ -24,6 +24,9 @@ TEMPLATES_DIR = SCRIPT_DIR / "templates"
 FLAVORS = ("claude", "codex", "antigravity")
 # 사용자 데이터 디렉토리 — 내용물은 절대 덮어쓰거나 지우지 않는다(.gitkeep만 보장).
 PRESERVE_DIRS = ("tasks", "_local")
+# 사용자 설정 파일 — 이미 존재하면 덮어쓰지 않는다(프로젝트별 커스텀 보존).
+# 예: vault.config 의 볼트 경로는 폴더마다 다를 수 있어 update 시 보존해야 한다.
+PRESERVE_FILES = ("_shared/vault.config",)
 
 
 def available_flavors() -> list[str]:
@@ -76,6 +79,8 @@ def copy_template(template_dir: Path, target: Path, dry: bool) -> list[Path]:
         rel = src.relative_to(template_dir)
         if is_user_data(rel):  # 방어적: 템플릿엔 .gitkeep만 있어 보통 도달 안 함
             continue
+        if str(rel) in PRESERVE_FILES and (target / rel).is_file():
+            continue  # 기존 사용자 설정 보존(update 모드) — 예: vault.config 볼트 경로
         dest = target / rel
         if not dry:
             dest.parent.mkdir(parents=True, exist_ok=True)

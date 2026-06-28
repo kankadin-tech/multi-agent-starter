@@ -36,6 +36,7 @@ Orchestrator (Codex session, internal reasoning)
 9. On completion, append reusable lessons only when they are genuinely reusable:
    - System-level lessons: `_shared/learnings.md`
    - Project-specific lessons: `_local/learnings.md` (not loaded unless explicitly requested)
+10. **(optional, manual) Vault link**: to record/classify/analyze/link outputs into an LLM Wiki vault (knot-style), run `_shared/adapters/export_to_vault.sh <task>` (`--all` for every task, `--media copy` to copy images/PDFs) → one-way send to the vault inbox. Vault is never modified. Vault path lives in `_shared/vault.config`. Spec: `_shared/vault-bridge.md`. Not automatic — explicit call. Ignore if the folder uses no vault.
 
 > When resuming an existing task, start with `_shared/orchestrator-rules.md` section 3 re-entry protocol, not step 1.
 
